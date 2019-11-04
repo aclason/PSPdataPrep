@@ -1,0 +1,168 @@
+---
+title: "Evaluations"
+author: "A. Clason"
+date: "May 7, 2019"
+output: html_document
+---
+
+
+
+
+```{r}
+
+```
+
+PSP data
+```{r}
+library(foreign)
+library(data.table)
+setwd("C:/Users/Alana2012/Sync/BVRC/SORTIE position/Data/PSP/raw PSP atrowbridge")
+
+#ct0 <- read.dbf("aaron trowbrigdge sbs bwbs ich sbpspsps - ct0.dbf")
+#ct0 <- as.data.table(ct0)
+
+#ct0SBS <- ct0[ECOSYS == "SBS mc 2"]
+#ct0SBS02 <- ct0[ECOSYS == "SBS mc 2 02"]
+#ct0SBS03 <- ct0[ECOSYS == "SBS mc 2 03"]
+#ct0SBS06 <- ct0[ECOSYS == "SBS mc 2 06"]
+#ct0SBS05 <- ct0[ECOSYS == "SBS mc 2 05"]
+
+#this would work if the ECOSYS call was consistent...but it's not!! Going to have to seperate the ecosystem pieces in excel?
+#ct0Split <- ct0[, c("Zone", "Subzone", "Variant", "SiteSeries","a") := tstrsplit(ECOSYS, " ", fixed=TRUE)]
+#as.data.table(ct0Split)
+
+ct0 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct0_BECsplit.csv", stringsAsFactors = TRUE)
+    ct0ss <- ct0[SiteSeries != ""]
+    length(ct0ss$SiteSeries)
+    table(ct0ss$SiteSeries)
+    plot(ct0ss$SiteSeries)
+    #of the 4399 measurements with site series called for all zones, 2011 are 01, 71 are 02
+    
+    ct0ss02 <- ct0ss[SiteSeries==2]
+    table(ct0ss02$Zone)
+    #of the 71 02 measurements, 10 in the BWBS, 33 in the ICH, 4 in the SBPS, 24 SBS
+    unique(ct0ss02$SAMP_ID)
+    #71 measurements are in 28 plots
+    
+    ct0SBS_02 <- ct0ss02[Zone=="SBS"]
+    table(ct0SBS_02$Subzone)
+    #the 24 02 sites in the SBS are in the mc, mk, wk only. Combine with the SBPS?
+    unique(ct0SBS_02$SAMP_ID)
+    #24 measurements in 10 plots
+    
+    ct0SBS_SBPS_02 <- ct0ss02[Zone %in% c("SBS","SBPS")]
+    #all plots were active in 2006
+    unique(ct0SBS_SBPS_02$SAMP_ID)
+    #this gets the tally up to 14 plots
+    
+    #create the csv to get climate data from climateWNA:
+    ctUTMs <- read.dbf("aaron trowbrigdge sbs bwbs ich sbpspsps - utms.dbf")
+    ctUTMs <- as.data.table(ctUTMs)
+    
+    #Merge with UTMS
+    #samp_id, utmz, utme, utmn from ctUTMs
+    #SAMP_ID, ELEV from ct0
+    ctUTMs <- setnames(ctUTMs,"samp_id","SAMP_ID")
+    ct0_utm <- merge(ct0,ctUTMs, by="SAMP_ID")
+    
+    ct0_Clim <- unique(ct0_utm, by="SAMP_ID")
+    ct0_ClimWNA  <- ct0_Clim[,.(SAMP_ID,SiteSeries,ELEV,utmz,utme,utmn)]
+    #write.csv(ct0_ClimWNA,"ct0_ClimWNA.csv")
+      
+    ct0_withClim <- fread("PSP_FROMClimWNA.csv", stringsAsFactors = TRUE)
+    str(ct0_withClim)
+    plot(ct0_withClim[,MAP]~ct0_withClim[,SiteSeries])
+    plot(ct0_withClim[,MAP]~ct0_withClim[,MAT])
+
+legend <- fread("Legend.csv")
+ct1 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct1.csv", stringsAsFactors = TRUE)
+  str(ct1)
+  ct1$MEAS_NO <- as.integer(ct1$MEAS_NO)
+  ct0_1 <- merge(ct0,ct1, by=c("SAMP_ID","MEAS_NO"))
+  ct0_1_utm <- merge(ct0_1,ct0_withClim, by="SAMP_ID")
+
+ct2 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct2.csv", stringsAsFactors = TRUE)
+  str(ct2)
+  ct0_1_2_utm <- merge(ct2,ct0_1_utm, by=c("SAMP_ID","MEAS_NO"))
+
+ct3 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct3.csv", stringsAsFactors = TRUE)
+  str(ct3)
+  ct0_1_2_3_utm <- merge(ct3,ct0_1_2_utm, by=c("SAMP_ID","MEAS_NO"))
+
+ct4 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct4.csv", stringsAsFactors = TRUE)
+  str(ct4)
+  ct0_1_2_3_4_utm <- merge(ct4,ct0_1_2_3_utm, by=c("SAMP_ID","MEAS_NO"))
+
+
+ct5 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct5.csv", stringsAsFactors = TRUE)
+  str(ct5)
+
+
+```
+
+Plot level - density, basal area, volume, diameter distribution, regen density, species
+
+
+
+
+Import SORTIE outputs
+Predicted:
+```{r}
+library(data.table)
+setwd("K:/Local_Sortie")
+
+dt_l <- list()
+dt <- data.table()
+yr <- 10
+for(i in 1:yr){
+  dt <- fread(paste0("forErin_1_5_Master_Light_",i), sep="\t", header=T,na.strings = "--", skip=1)
+  timestep <- i
+  dt[, timestep := i]
+  dt_l[i] <- list(dt)
+}
+dt_l_bind <- rbindlist(dt_l) 
+```
+
+Import Observed data:
+
+```{r}
+#Deb's data
+read.csv(".csv")
+#PSP data
+
+
+```
+
+(LeMay ) Started a PSP plot in SORTIE. Compared year 15 predicted regen density by size class and species, predicted live and dead overstory densities and basal area and understory light levels. Bias, RMSE and abs. deviation used to compare to other methods.!These plots were in the IDF and SBPS!
+
+Density
+```{r}
+#observed vs. predicted
+
+#<1.3m
+regen.density 
+
+
+```
+
+
+Basal area
+```{r}
+
+```
+
+
+Volume??
+```{r}
+
+```
+
+
+DBH distribution
+```{r}
+
+```
+
+
+
+
