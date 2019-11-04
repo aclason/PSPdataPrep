@@ -1,18 +1,28 @@
 ---
-title: "Evaluations"
+title: "PSP data cleaning"
 author: "A. Clason"
-date: "May 7, 2019"
+date: "September 16, 2019"
 output: html_document
 ---
-
-
-
-
+Libraries
 ```{r}
+library(data.table)
+```
+
+Import data
+```{r}
+setwd("C:/Users/Alana2012/ALANA_FILES/Work/BVRC/SORTIE/SORTIE-edaphic/PSP data")
+
+dat_hdr <- fread("source_hdr.csv")
+dat_msmt <- fread("source_msmt.csv")
+
+
+dat_sum <-dat_msmt[,.(SAMP_ID,latitude,longitude,elev,sampletype,treatment,beclabel_grd,grid_size,plot_typ,meas_yr_first, meas_yr_last,min_dbh, max_dbh,stemsha_LIV,tot_stand_age)]
+
 
 ```
 
-PSP data
+Aaron Trowbridge's PSP data:
 ```{r}
 library(foreign)
 library(data.table)
@@ -99,70 +109,4 @@ ct5 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct5.csv", stringsAsFacto
 
 
 ```
-
-Plot level - density, basal area, volume, diameter distribution, regen density, species
-
-
-
-
-Import SORTIE outputs
-Predicted:
-```{r}
-library(data.table)
-setwd("K:/Local_Sortie")
-
-dt_l <- list()
-dt <- data.table()
-yr <- 10
-for(i in 1:yr){
-  dt <- fread(paste0("forErin_1_5_Master_Light_",i), sep="\t", header=T,na.strings = "--", skip=1)
-  timestep <- i
-  dt[, timestep := i]
-  dt_l[i] <- list(dt)
-}
-dt_l_bind <- rbindlist(dt_l) 
-```
-
-Import Observed data:
-
-```{r}
-#Deb's data
-read.csv(".csv")
-#PSP data
-
-
-```
-
-(LeMay ) Started a PSP plot in SORTIE. Compared year 15 predicted regen density by size class and species, predicted live and dead overstory densities and basal area and understory light levels. Bias, RMSE and abs. deviation used to compare to other methods.!These plots were in the IDF and SBPS!
-
-Density
-```{r}
-#observed vs. predicted
-
-#<1.3m
-regen.density 
-
-
-```
-
-
-Basal area
-```{r}
-
-```
-
-
-Volume??
-```{r}
-
-```
-
-
-DBH distribution
-```{r}
-
-```
-
-
-
 
