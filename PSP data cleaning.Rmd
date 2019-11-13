@@ -29,6 +29,8 @@ for(i in 1:length(dat.type)){
 #result is dat.list which contains [[1]]:Sample and [[2]]Trees 
 ```
 
+SITE SERIES APPROACH:
+
 Sample data
 
 This step will involve understanding all the information on a plot that is available, and determining which plots will be useful for a given purpose. Once the plots are id'd then can select those plotIDs from the Trees dataset (element 2 in dat.list)
@@ -39,7 +41,7 @@ Minimum Criteria:
 ```{r}
 #take the sample data.table out of a list and save in data.table format
 samples.dt <- (dat.list[[1]])
-# Remove repeats (which I think represent sub-plots)
+# Remove repeats (which I think represent sub-plots) - mI'm doing this sometimes, but not everytime
 uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
 
 #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent i.e SBSmc2 is spelled the same across datasets.
@@ -63,14 +65,17 @@ Analysis criteria:
 1. Remove if thinned
 2. Remove if the plot planted (only 2 and they were also thinned)
 ```{r}
-analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"]
-
+analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"] #72? plots if use site series calls
+```
+```{r}
 #it seems that there is only 1 plot for all plots I've cut down to if I use all plots and don't remove duplicates:
 all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
 all.samps.dt[,area_pm == area_ps]
 range(all.samps.dt[, no_plots])
 unique(all.samps.dt[, shp_pm]) #all circles
 all.samps.dt[SAMP_ID=="CMI5_0232_NFI",area_pm] #just saw different calls on Site Series for this plot - 01 in 2001, 02 in 2017
+
+all.samps.dt[which(all.samps.dt[,bgc_ss_grd==2]),.(SAMP_ID,tsa)]
 
 analysis.samples[,no_plots]
 analysis.samples[,area_ps]
@@ -85,6 +90,40 @@ remeas.samples[,dbhlimit_breakpt] #tag limit in main vs. subplots
 remeas.samples[,dbhlimit_tag] #tag limit in sub-plots
 remeas.samples[which(remeas.samples[,bgc_ss_grd==2]),SAMP_ID]
 ```
+
+
+SITE INDEX APPROACH:
+
+Doing the same steps, but figuring out how many more or different plots meet the criteria if we include SI
+```{r}
+#looking at site index range from the plots that meet my criteria other then having site series:
+samples.dt <- (dat.list[[1]])
+uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
+criteria.samples <- uni.samples.dt[beclabel=="SBSmc2"]
+remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
+range(remeas.samples[,tot_period]) #indicates min. remeasurement is 5 years
+remeas.samples <- remeas.samples[tot_period>=10] #now has to be 10 years minimum
+analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P" & spc_live1!=""]
+analysis.samples[,spc_live1] #104 potential plots if use SI
+
+#look at possible 02 sites:
+dim(pine.lead <- analysis.samples[spc_live1=="PL"]) #65 stands pine leading
+pine.lead[,.(lead_si1,lead_si3,lead_si4,lead_age_bh1)]
+pine.lead[,lead_si1 := ifelse(lead_si1==-99,NA,lead_si1)]
+pine.lead[,.(SAMP_ID,tsa,bgc_ss_grd,lead_si1,lead_si3,lead_si4,lead_age_bh1)][order(lead_si1)]
+
+# So lead_si4 comes from a TEM/PEM/SIBEC map layer. It's tempting to maintain this as an option on the hierarchy of data quality. Seems like it's too coarse to pick out the least productive sites (02?)
+
+hist(pine.lead[,lead_si1a])
+hist(pine.lead[,lead_si3a])
+hist(pine.lead[,lead_si4a])
+
+#what if I look at all plots and not just pine leading?
+analysis.samples[,.(SAMP_ID,tsa,bgc_ss_grd,spc_live1,lead_si1,lead_si3,lead_si4,lead_age_bh1)][order(lead_si1)]
+
+
+```
+
 
 #this is getting ahead of myself - looking at diameters in 02 plot. But what I was looking for is what trees count in these plots. Not looking like regen would be tallied? Unless X = ingrowth
 
