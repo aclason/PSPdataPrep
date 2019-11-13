@@ -11,7 +11,7 @@ library(data.table)
 
 Import data
 ```{r}
-r.path <- "D:/PSP data/PSP csv/"
+r.path <- "L:/PSP data/PSP csv/"
 
 #Import sample and then tree data
 dat.type <- c("Sample","Trees")
@@ -32,7 +32,7 @@ for(i in 1:length(dat.type)){
 Sample data
 
 This step will involve understanding all the information on a plot that is available, and determining which plots will be useful for a given purpose. Once the plots are id'd then can select those plotIDs from the Trees dataset (element 2 in dat.list)
-Criteria:
+Minimum Criteria:
 1. Is the plot in the SBSmc2?
 2. Does it have a Site Series call?
 
@@ -47,33 +47,55 @@ criteria.samples <- uni.samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0]
 table(criteria.samples$bgc_ss_grd)
 ```
 
-Sample data II
+Re-measurement criteria:
 
-I'm not sure yet if this would result in removing plots from use but we would need to know:
-1. Was there a silvicultural treatment?
-2. Was the plot planted?
+1. What plots have multiple measurements?
+2. What is the greatest time span for these measurements?
+```{r}
+remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
+range(remeas.samples[,tot_period]) #indicates min. remeasurement is 10 years
+table(remeas.samples$bgc_ss_grd)
+```
+There could be one analysis here that tries to grow specific plot situations: thinned, beetle-killed etc. But for now, proceed to find the most number of plots that conform
+
+Analysis criteria:
+
+1. Remove if thinned
+2. Remove if the plot planted (only 2 and they were also thinned)
+```{r}
+analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"]
+
+#it seems that there is only 1 plot for all plots I've cut down to if I use all plots and don't remove duplicates:
+all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
+all.samps.dt[,area_pm == area_ps]
+range(all.samps.dt[, no_plots])
+unique(all.samps.dt[, shp_pm]) #all circles
+all.samps.dt[SAMP_ID=="CMI5_0232_NFI",area_pm] #just saw different calls on Site Series for this plot - 01 in 2001, 02 in 2017
+
+analysis.samples[,no_plots]
+analysis.samples[,area_ps]
+
+samples.dt[SAMP_ID=="CMI5_0232_NFI",1:100]
+
+analysis.samples[,area_pm]
+remeas.samples[,no_plots]
+remeas.samples[,no_meas]
+
+remeas.samples[,dbhlimit_breakpt] #tag limit in main vs. subplots
+remeas.samples[,dbhlimit_tag] #tag limit in sub-plots
+remeas.samples[which(remeas.samples[,bgc_ss_grd==2]),SAMP_ID]
+```
+
+#this is getting ahead of myself - looking at diameters in 02 plot. But what I was looking for is what trees count in these plots. Not looking like regen would be tallied? Unless X = ingrowth
+
+
 3. How old is the plot?
 4. What size classes of trees were measured?
 5. Is it a fixed area or variable area plot?
+6. MPB?
 
 ```{r}
-criteria.samples[,bgc_ss_grd]
-criteria.samples[,sampletype]
-criteria.samples[,treatment]
-criteria.samples[,plot_typ]
-criteria.samples[,area_pm]
-criteria.samples[,no_plots]
-criteria.samples[,no_meas]
-criteria.samples[,meas_yr_first]
-criteria.samples[,meas_yr_last]
-criteria.samples[,dbhlimit_breakpt] #tag limit in main vs. subplots
-criteria.samples[,dbhlimit_tag] #tag limit in sub-plots
-criteria.samples[which(criteria.samples[,bgc_ss_grd==2]),SAMP_ID]
 
-
-
-
-#this is getting ahead of myself - looking at diameters in 02 plot. But what I was looking for is what trees count in these plots. Not looking like regen would be tallied? Unless X = ingrowth
 dat.list[[2]][,samp_plotID := paste0(samp_id,"_",plot_no)]
 
 tree.dat <- dat.list[[2]]
@@ -83,14 +105,8 @@ hist(tree.dat[samp_id== "CMI5_0232_NFI",dbh])
 
 
 samples.dt[CMI5_0232_NFI,]
+
 ```
-
-Sample data III
-
-1. What plots have multiple measurements?
-2. What is the greatest time span for these measurements?
-
-
 
 Aaron Trowbridge's PSP data:
 ```{r}
