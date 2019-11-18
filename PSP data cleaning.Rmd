@@ -41,7 +41,7 @@ Minimum Criteria:
 ```{r}
 #take the sample data.table out of a list and save in data.table format
 samples.dt <- (dat.list[[1]])
-# Remove repeats (which I think represent sub-plots) - mI'm doing this sometimes, but not everytime
+# Remove repeats (which I think represent sub-plots)
 uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
 
 #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent i.e SBSmc2 is spelled the same across datasets.
@@ -66,8 +66,7 @@ Analysis criteria:
 2. Remove if the plot planted (only 2 and they were also thinned)
 ```{r}
 analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"] #72? plots if use site series calls
-```
-```{r}
+
 #it seems that there is only 1 plot for all plots I've cut down to if I use all plots and don't remove duplicates:
 all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
 all.samps.dt[,area_pm == area_ps]
@@ -107,10 +106,11 @@ analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P" & spc_
 analysis.samples[,spc_live1] #104 potential plots if use SI
 
 #look at possible 02 sites:
-dim(pine.lead <- analysis.samples[spc_live1=="PL"]) #65 stands pine leading
-pine.lead[,.(lead_si1,lead_si3,lead_si4,lead_age_bh1)]
+pine.lead <- analysis.samples[spc_live1=="PL"] #65 stands pine leading
+pine.lead[,.(lead_si1,lead_si3,lead_si4,bh_stand_age)]
 pine.lead[,lead_si1 := ifelse(lead_si1==-99,NA,lead_si1)]
-pine.lead[,.(SAMP_ID,tsa,bgc_ss_grd,lead_si1,lead_si3,lead_si4,lead_age_bh1)][order(lead_si1)]
+pine.lead[,bgc_ss_grd := ifelse(is.na(bgc_ss_grd),11,bgc_ss_grd)]
+pine.lead[,.(SAMP_ID,tsa,bgc_ss_grd,lead_si1,lead_si3,lead_si4,bh_stand_age)]#[order(lead_si1)]
 
 # So lead_si4 comes from a TEM/PEM/SIBEC map layer. It's tempting to maintain this as an option on the hierarchy of data quality. Seems like it's too coarse to pick out the least productive sites (02?)
 
@@ -121,6 +121,50 @@ hist(pine.lead[,lead_si4a])
 #what if I look at all plots and not just pine leading?
 analysis.samples[,.(SAMP_ID,tsa,bgc_ss_grd,spc_live1,lead_si1,lead_si3,lead_si4,lead_age_bh1)][order(lead_si1)]
 
+#what if I used an ordination to classify plots based on leading species, SI, Age, Density, etc.
+#So far, I can't see any grouping using ordinations, but could use a classification tree (random forest approach)
+library(vegan)
+library(ecodist)
+pca.pine.lead <- princomp(na.omit(pine.lead[,.(lead_si1,lead_si3,lead_si4,bh_stand_age,stemsha_LIV)]))
+biplot(pca.pine.lead)
+
+dist.pine.lead <- bcdist(na.omit(pine.lead[,.(lead_si1,lead_si3,lead_si4,bh_stand_age,stemsha_LIV,aspect, slope)]))
+nmds_out <- nmds(dist.pine.lead, mindim=2, maxdim=2)
+scores <- nmds.min(nmds_out)
+sort(pine.lead[,bgc_ss_grd])
+mycol=c("green","yellow","red","blue","purple","orange","brown","black","pink","")
+plot(scores, pch=19, col=mycol[pine.lead[,bgc_ss_grd]])
+
+
+dat <- na.omit(pine.lead[,.(bgc_ss_grd,lead_si1,lead_si3,lead_si4,bh_stand_age,stemsha_LIV,aspect, slope)])
+dat1 <- dat[,.(lead_si1,lead_si3,lead_si4,bh_stand_age,stemsha_LIV,aspect, slope)]
+dist.pine.lead <- bcdist(dat1)
+out1 <- metaMDS(dist.pine.lead, k=2, trymax=500)
+plot(out1$points, pch=19)
+mycol = c("green","red","blue","purple","black")
+plot(out1$points, pch=19, col=mycol[sort(unique(dat[,bgc_ss_grd]))])
+vectors <- vf(out1$points, dat ,nperm=10)
+plot(vectors, col="red")
+mygroups <- sort(unique(dat[,bgc_ss_grd]))
+for (i in 1:6){
+ ordiellipse(out1$points, dat[,bgc_ss_grd], conf=0.6, col=mycol[i], show.groups=mygroups[i])
+}
+
+boxplot(dat$stemsha_LIV~dat$bgc_ss_grd)
+boxplot(dat$lead_si1~dat$bgc_ss_grd)
+
+#density doesn't seem to relate to age, SI, or SS for pine leading
+plot(dat$stemsha_LIV~dat$lead_si1, pch=19)
+plot(dat$stemsha_LIV~dat$bh_stand_age, pch=19)
+plot(dat$stemsha_LIV~dat$bgc_ss_grd, pch=19)
+
+analysis.samples[,lead_si1 := ifelse(lead_si1==-99,NA,lead_si1)]
+analysis.samples[,bgc_ss_grd := ifelse(is.na(bgc_ss_grd),0,bgc_ss_grd)]
+analysis.samples[,.(SAMP_ID,tsa,spc_live1,bgc_ss_grd,lead_si1,lead_si3,lead_si4,bh_stand_age,stemsha_LIV,aspect, slope)]#[order(lead_si1)]
+
+plot(analysis.samples$stemsha_LIV~analysis.samples$lead_si1, pch=19)
+plot(analysis.samples$stemsha_LIV~analysis.samples$bh_stand_age, pch=19)
+plot(analysis.samples$stemsha_LIV~analysis.samples$bgc_ss_grd, pch=19)
 
 ```
 
@@ -147,90 +191,26 @@ samples.dt[CMI5_0232_NFI,]
 
 ```
 
-Aaron Trowbridge's PSP data:
+
+Selecting 2 of the best '02' plots
 ```{r}
-library(foreign)
-library(data.table)
-setwd("C:/Users/Alana2012/Sync/BVRC/SORTIE position/Data/PSP/raw PSP atrowbridge")
-
-#ct0 <- read.dbf("aaron trowbrigdge sbs bwbs ich sbpspsps - ct0.dbf")
-#ct0 <- as.data.table(ct0)
-
-#ct0SBS <- ct0[ECOSYS == "SBS mc 2"]
-#ct0SBS02 <- ct0[ECOSYS == "SBS mc 2 02"]
-#ct0SBS03 <- ct0[ECOSYS == "SBS mc 2 03"]
-#ct0SBS06 <- ct0[ECOSYS == "SBS mc 2 06"]
-#ct0SBS05 <- ct0[ECOSYS == "SBS mc 2 05"]
-
-#this would work if the ECOSYS call was consistent...but it's not!! Going to have to seperate the ecosystem pieces in excel?
-#ct0Split <- ct0[, c("Zone", "Subzone", "Variant", "SiteSeries","a") := tstrsplit(ECOSYS, " ", fixed=TRUE)]
-#as.data.table(ct0Split)
-
-ct0 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct0_BECsplit.csv", stringsAsFactors = TRUE)
-    ct0ss <- ct0[SiteSeries != ""]
-    length(ct0ss$SiteSeries)
-    table(ct0ss$SiteSeries)
-    plot(ct0ss$SiteSeries)
-    #of the 4399 measurements with site series called for all zones, 2011 are 01, 71 are 02
-    
-    ct0ss02 <- ct0ss[SiteSeries==2]
-    table(ct0ss02$Zone)
-    #of the 71 02 measurements, 10 in the BWBS, 33 in the ICH, 4 in the SBPS, 24 SBS
-    unique(ct0ss02$SAMP_ID)
-    #71 measurements are in 28 plots
-    
-    ct0SBS_02 <- ct0ss02[Zone=="SBS"]
-    table(ct0SBS_02$Subzone)
-    #the 24 02 sites in the SBS are in the mc, mk, wk only. Combine with the SBPS?
-    unique(ct0SBS_02$SAMP_ID)
-    #24 measurements in 10 plots
-    
-    ct0SBS_SBPS_02 <- ct0ss02[Zone %in% c("SBS","SBPS")]
-    #all plots were active in 2006
-    unique(ct0SBS_SBPS_02$SAMP_ID)
-    #this gets the tally up to 14 plots
-    
-    #create the csv to get climate data from climateWNA:
-    ctUTMs <- read.dbf("aaron trowbrigdge sbs bwbs ich sbpspsps - utms.dbf")
-    ctUTMs <- as.data.table(ctUTMs)
-    
-    #Merge with UTMS
-    #samp_id, utmz, utme, utmn from ctUTMs
-    #SAMP_ID, ELEV from ct0
-    ctUTMs <- setnames(ctUTMs,"samp_id","SAMP_ID")
-    ct0_utm <- merge(ct0,ctUTMs, by="SAMP_ID")
-    
-    ct0_Clim <- unique(ct0_utm, by="SAMP_ID")
-    ct0_ClimWNA  <- ct0_Clim[,.(SAMP_ID,SiteSeries,ELEV,utmz,utme,utmn)]
-    #write.csv(ct0_ClimWNA,"ct0_ClimWNA.csv")
-      
-    ct0_withClim <- fread("PSP_FROMClimWNA.csv", stringsAsFactors = TRUE)
-    str(ct0_withClim)
-    plot(ct0_withClim[,MAP]~ct0_withClim[,SiteSeries])
-    plot(ct0_withClim[,MAP]~ct0_withClim[,MAT])
-
-legend <- fread("Legend.csv")
-ct1 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct1.csv", stringsAsFactors = TRUE)
-  str(ct1)
-  ct1$MEAS_NO <- as.integer(ct1$MEAS_NO)
-  ct0_1 <- merge(ct0,ct1, by=c("SAMP_ID","MEAS_NO"))
-  ct0_1_utm <- merge(ct0_1,ct0_withClim, by="SAMP_ID")
-
-ct2 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct2.csv", stringsAsFactors = TRUE)
-  str(ct2)
-  ct0_1_2_utm <- merge(ct2,ct0_1_utm, by=c("SAMP_ID","MEAS_NO"))
-
-ct3 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct3.csv", stringsAsFactors = TRUE)
-  str(ct3)
-  ct0_1_2_3_utm <- merge(ct3,ct0_1_2_utm, by=c("SAMP_ID","MEAS_NO"))
-
-ct4 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct4.csv", stringsAsFactors = TRUE)
-  str(ct4)
-  ct0_1_2_3_4_utm <- merge(ct4,ct0_1_2_3_utm, by=c("SAMP_ID","MEAS_NO"))
+samples.dt <- (dat.list[[1]])
+#only one row per sample ID
+uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
+criteria.samples <- uni.samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0]
+table(criteria.samples$bgc_ss_grd)
+remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
+table(remeas.samples$bgc_ss_grd)
+analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"] #72? plots if use site series calls
+analysis.samples[which(analysis.samples[,bgc_ss_grd==2]),.(SAMP_ID,tsa)]
 
 
-ct5 <- fread("aaron trowbrigdge sbs bwbs ich sbpspsps - ct5.csv", stringsAsFactors = TRUE)
-  str(ct5)
+#all rows
+all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
+all.samps.dt[,area_pm == area_ps]
+all.samps.dt[which(all.samps.dt[,bgc_ss_grd==2]),.(SAMP_ID,tsa)]
+
+#I need a 9 ha plot generated from the diameter distribution
 
 
 ```
