@@ -171,24 +171,66 @@ plot(analysis.samples$stemsha_LIV~analysis.samples$bgc_ss_grd, pch=19)
 
 #this is getting ahead of myself - looking at diameters in 02 plot. But what I was looking for is what trees count in these plots. Not looking like regen would be tallied? Unless X = ingrowth
 
-
+2. how large is the plot # paf is the factor you multiply to get 1 ha. 1ha/paf = plot size (1/250=0.04)
 3. How old is the plot?
 4. What size classes of trees were measured?
 5. Is it a fixed area or variable area plot?
 6. MPB?
 
+Create the Tree Population Parameters for a SORTIE run: 
+This is all hard coded in the sense that if I changed the order of species, this will break.
 ```{r}
 
-dat.list[[2]][,samp_plotID := paste0(samp_id,"_",plot_no)]
+#size classes = upper limit DBH, 0 = seedlings <2cm DBH. I'm going to switch it so that it starts at 4cm to go with PSP data?
+New.Seedling.Diam.10cm <- 1
+Sdlg.Hgt.Class.1.Upp.B <- 1
+Sdlg.Hgt.Class.2.Upp.B <-1
+#Tree.Map.To.Add.As.Text <- 1
+Tree.species <- c("Interior_Spruce","Lodgepole_Pine","Subalpine_Fir","Trembling_Aspen")
+Min.Adult.DBH <- c(3.0,5.0,5.0,5.0)
+Max.Seedling.Hgt.m <- rep(1.35, length(Tree.species))
+Init.Dens.Seedling.Hgt.Class.1 <- rep(0, length(Tree.species))
+Init.Dens.Seedling.Hgt.Class.2 <- rep(0, length(Tree.species))
+Init.Dens.Seedling.Hgt.Class.3 <- rep(0, length(Tree.species))
+Init.Dens.Seedling <- rep(0, length(Tree.species))
+sizeClasses <- seq(4,80, by =2)
+  inits <- vector()
+  init.values <- matrix(nrow=length(sizeClasses),ncol=length(Tree.species))
+  for(i in 1:length(sizeClasses)){
+    inits[i] <- paste0("Init.Dens.",sizeClasses[i])
+  }
+  row.names(init.values) <- inits
+  for(j in 1:length(Tree.species)){
+    init.values[,j] <- rep(0, length(inits))
+  }
 
+# Now create the data.table of parameter values that vary
+SORTIE.tree.dat <- data.table()
+SORTIE.tree.dat <- rbind(Min.Adult.DBH,Max.Seedling.Hgt.m,Init.Dens.Seedling.Hgt.Class.1,Init.Dens.Seedling.Hgt.Class.2,Init.Dens.Seedling.Hgt.Class.3,Init.Dens.Seedling,init.values)
+colnames(SORTIE.tree.dat)<-Tree.species
+
+# Figure out which tree values to change (all in #/ha):
 tree.dat <- dat.list[[2]]
-unique(tree.dat[samp_id=="CMI5_0232_NFI",])
+P60136.G000004 <- tree.dat[samp_id=="60136 G000004" & meas_no==0]
 
-hist(tree.dat[samp_id== "CMI5_0232_NFI",dbh])
+#I'm using L, I, V as alive, DU and DP as dead. Live Dead tree flag : L=live, I=Live ingrowth exceeding minimum DBH tagging limit (if a subplot tree) or exceeding breakpoint DBH limit (if in main plot), V=live vet, DP=dead potential (<50% decay), DU=dead useless (>=50% decay), C=cut, X=ingrowth less than minimum DBH of 4.0cm
+P60136.G000004[,LD_Group:=ifelse(ld=="L",1,ifelse(ld=="I",1,ifelse(ld=="V",1,2)))]
+red.P60136.G000004 <- P60136.G000004[,.(samp_id,meas_yr,phf_tree,species,dbh,ld,LD_Group,age_bh,height)]
 
+#just live species
+ld.red.P60136.G000004 <- red.P60136.G000004[LD_Group==1]
+for(i in 1:length(sizeClasses)){
+    ld.red.P60136.G000004[dbh <= sizeClasses[i] & dbh > sizeClasses[i-1], DBH_bin := i]
+}
 
-samples.dt[CMI5_0232_NFI,]
+tree.per.bin <- ld.red.P60136.G000004[,.N, by=DBH_bin]
+tree.per.bin[,Trees.per.ha := N*12.34125]
+setkey(tree.per.bin,DBH_bin)
 
+sizeClasses[tree.per.bin[[1]]]
+
+#convert to species id
+sp.conv
 ```
 
 
@@ -212,6 +254,7 @@ all.samps.dt[which(all.samps.dt[,bgc_ss_grd==2]),.(SAMP_ID,tsa)]
 
 #I need a 9 ha plot generated from the diameter distribution
 
+dat.list[[2]][,samp_plotID := paste0(samp_id,"_",plot_no)]
 
 ```
 
