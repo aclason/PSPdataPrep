@@ -11,7 +11,7 @@ library(data.table)
 
 Import data
 ```{r}
-r.path <- "L:/PSP data/PSP csv/"
+r.path <- "D:/PSP data/PSP csv/"
 
 #Import sample and then tree data
 dat.type <- c("Sample","Trees")
@@ -113,10 +113,6 @@ pine.lead[,bgc_ss_grd := ifelse(is.na(bgc_ss_grd),11,bgc_ss_grd)]
 pine.lead[,.(SAMP_ID,tsa,bgc_ss_grd,lead_si1,lead_si3,lead_si4,bh_stand_age)]#[order(lead_si1)]
 
 # So lead_si4 comes from a TEM/PEM/SIBEC map layer. It's tempting to maintain this as an option on the hierarchy of data quality. Seems like it's too coarse to pick out the least productive sites (02?)
-
-hist(pine.lead[,lead_si1a])
-hist(pine.lead[,lead_si3a])
-hist(pine.lead[,lead_si4a])
 
 #what if I look at all plots and not just pine leading?
 analysis.samples[,.(SAMP_ID,tsa,bgc_ss_grd,spc_live1,lead_si1,lead_si3,lead_si4,lead_age_bh1)][order(lead_si1)]
