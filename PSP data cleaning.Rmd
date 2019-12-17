@@ -11,13 +11,20 @@ library(data.table)
 
 Import data
 ```{r}
-r.path <- "L:/PSP data/PSP csv/"
-setwd("C:/Users/Alana2012/ALANA_FILES/GitHub/SORTIE-r")
-source("SORTIE-functions.R")
+r.path <- "D:/PSP data/PSP csv/"
+#write an ifelse function to define machine path?
+m.path <- "C:/Users/Alana2012/"
+m.path <- "C:/Users/alana_laptop/Documents/"
+
+source(paste0(m.path,"GitHub/SORTIE-r/SORTIE-functions.R"))
+
 dat.type <- c("Sample","Trees")
-tsas <- c("03","12","14","20","24","26")
+#tsas <- c("03","12","14","20","24","26")
+tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
 dat.list <- import.psp(dat.type=dat.type, tsas=tsas)
-#result is dat.list which contains [[1]]:Sample and [[2]]Trees 
+#result is dat.list which contains [[1]]:Sample and [[2]]Trees
+unique(dat.list[[1]]$tsa)
+
 ```
 
 SITE SERIES APPROACH:
@@ -37,7 +44,9 @@ uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
 
 #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent i.e SBSmc2 is spelled the same across datasets.
 criteria.samples <- uni.samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0]
+criteria.samples <- uni.samples.dt[bgc_zone=="SBS"]
 table(criteria.samples$bgc_ss_grd)
+table(criteria.samples$beclabel)
 ```
 
 Re-measurement criteria:
@@ -46,8 +55,23 @@ Re-measurement criteria:
 2. What is the greatest time span for these measurements?
 ```{r}
 remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
-range(remeas.samples[,tot_period]) #indicates min. remeasurement is 10 years
+range(remeas.samples[,tot_period]) #indicates minimum gap in re-measurements
+remeas.samples <- remeas.samples[tot_period>=10]
 table(remeas.samples$bgc_ss_grd)
+
+#this is all the SBS plots with 02 call
+plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==2]$SAMP_ID)
+plot.SORTIE <- plot.SORTIE[plot.SORTIE!="CMI5_0232_NFI"]
+#tree species
+tree.dat.plot.SORTIE <- tree.dat[samp_id %in% plot.SORTIE]
+unique(tree.dat.plot.SORTIE$species)
+tree.dat.plot.SORTIE[which(tree.dat.plot.SORTIE[,species=="DM"]),.(samp_id)]
+
+#how many trees of each species by plot
+tree.per.plot <- tree.dat.plot.SORTIE[,.N, by=.(samp_id,species)]
+#based on this, the only 02 plot I would consider dropping across all SBS zones included here would be plot 59016, but still <10% other species. Move forward for now with all species included.
+
+
 ```
 There could be one analysis here that tries to grow specific plot situations: thinned, beetle-killed etc. But for now, proceed to find the most number of plots that conform
 
@@ -57,15 +81,16 @@ Analysis criteria:
 2. Remove if the plot planted (only 2 and they were also thinned)
 ```{r}
 analysis.samples <- remeas.samples[treatment != "THINNED" & stnd_org!="P"] #72? plots if use site series calls
-
+table(analysis.samples$bgc_ss_grd)
 #it seems that there is only 1 plot for all plots I've cut down to if I use all plots and don't remove duplicates:
-all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
+#all.samps.dt <- samples.dt[beclabel=="SBSmc2" & bgc_ss_grd>0 & meas_yr_first != meas_yr_last & treatment != "THINNED"] 
+all.samps.dt <- analysis.samples
 all.samps.dt[,area_pm == area_ps]
 range(all.samps.dt[, no_plots])
 unique(all.samps.dt[, shp_pm]) #all circles
 all.samps.dt[SAMP_ID=="CMI5_0232_NFI",area_pm] #just saw different calls on Site Series for this plot - 01 in 2001, 02 in 2017
 
-all.samps.dt[which(all.samps.dt[,bgc_ss_grd==2]),.(SAMP_ID,tsa)]
+all.samps.dt[which(all.samps.dt[,bgc_ss_grd==2]),.(SAMP_ID,tsa,beclabel)]
 
 analysis.samples[,no_plots]
 analysis.samples[,area_ps]
