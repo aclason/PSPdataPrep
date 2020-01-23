@@ -59,7 +59,7 @@ remeas.samples <- remeas.samples[tot_period>=10]
 table(remeas.samples$bgc_ss_grd)
 
 #this is all the SBS plots with 02 call
-plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==2]$SAMP_ID)
+plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==5]$SAMP_ID)
 #plot.SORTIE <- plot.SORTIE[plot.SORTIE!="CMI5_0232_NFI"]
 #tree species
 tree.dat <- psp.dat[[2]]
