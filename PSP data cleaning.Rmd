@@ -55,23 +55,46 @@ Re-measurement criteria:
 ```{r}
 remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
 range(remeas.samples[,tot_period]) #indicates minimum gap in re-measurements
+table(remeas.samples$bgc_ss_grd)
 remeas.samples <- remeas.samples[tot_period>=10]
 table(remeas.samples$bgc_ss_grd)
 
 #this is all the SBS plots with 02 call
-plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==5]$SAMP_ID)
+plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==1]$SAMP_ID)
 #plot.SORTIE <- plot.SORTIE[plot.SORTIE!="CMI5_0232_NFI"]
 #tree species
 tree.dat <- psp.dat[[2]]
 tree.dat.plot.SORTIE <- tree.dat[samp_id %in% plot.SORTIE]
+
+# Fix species names - need to make a more generic function (borrow from LandR)?
 unique(tree.dat.plot.SORTIE$species)
-tree.dat.plot.SORTIE[which(tree.dat.plot.SORTIE[,species=="DM"]),.(samp_id)]
+
+#S might not be Spruce? Might be scouler's willow...seems unlikely, all the other willows are Wsomething. Tons of sites have "S" - more likely spruce
+tree.dat.plot.SORTIE[,sp_PSP:=ifelse(species=="SW","SX",
+                         ifelse(species=="S","SX",
+                                ifelse(species=="B","BL",
+                                       ifelse(species =="DM","D",
+                                              ifelse(species=="DR","D",
+                                                     ifelse(species=="AC","AT",
+                                                            species))))))]
+
+
+
+unique(tree.dat.plot.SORTIE$sp_PSP)
+setkey(tree.dat.plot.SORTIE)
+#remove plots based on composition: actually just need to remove from plotID
+rm.plot <- unique(tree.dat.plot.SORTIE[which(tree.dat.plot.SORTIE[,species==.("XC","CW")]),.(samp_id)])
+tree.dat.plot.SORTIE.rm.sp <- tree.dat.plot.SORTIE[!rm.plot]
+
+#remove if treated (thinned or planted)
+samp.reduced <- remeas.samples[SAMP_ID %in% unique(tree.dat.plot.SORTIE.rm.sp$samp_id)]
+analysis.samples <- unique(samp.reduced[treatment != "THINNED" & stnd_org!="P"]$SAMP_ID)
+
+
+
 
 #how many trees of each species by plot
 tree.per.plot <- tree.dat.plot.SORTIE[,.N, by=.(samp_id,species)]
-#based on this, the only 02 plot I would consider dropping across all SBS zones included here would be plot 59016, but still <10% other species. Move forward for now with all species included.
-
-
 ```
 There could be one analysis here that tries to grow specific plot situations: thinned, beetle-killed etc. But for now, proceed to find the most number of plots that conform
 
