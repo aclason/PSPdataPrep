@@ -11,7 +11,7 @@ library(data.table)
 
 Import data
 ```{r}
-r.path <- "L:/PSP data/PSP csv/"
+r.path <- "D:/PSP data/PSP csv/"
 #write an ifelse function to define machine path?
 m.path <- "C:/Users/Alana2012/ALANA_FILES/"
 m.path <- "C:/Users/alana_laptop/Documents/"
@@ -43,10 +43,34 @@ uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
 
 #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent i.e SBSmc2 is spelled the same across datasets.
 criteria.samples <- uni.samples.dt[beclabel_grd=="SBSmc2" & bgc_ss_grd>0]
+#The bgc_zone call is not accurate and the beclabel_grd (ground call should be used when possible)
 criteria.samples <- uni.samples.dt[bgc_zone=="SBS"& bgc_ss_grd>0]
 table(criteria.samples$bgc_ss_grd)
 table(criteria.samples$beclabel)
+#All SBPS, SBS
+criteria.samples <- uni.samples.dt[beclabel_grd=="SBPS"|beclabel_grd=="SBPSdc"|beclabel_grd=="SBPSmc" |beclabel_grd== "SBPSmk" |beclabel_grd== "SBPSmk1" |beclabel_grd== "SBPSmk3" |beclabel_grd== "SBPSxc" |beclabel_grd=="SBPSxc1" |beclabel_grd== "SBPSxc3" |beclabel_grd== "SBPSxc4" |beclabel_grd== "SBS" |beclabel_grd== "SBS1" |beclabel_grd== "SBS2"|beclabel_grd== "SBS3" |beclabel_grd== "SBSdh1" |beclabel_grd== "SBSdh2" |beclabel_grd== "SBSdk" |beclabel_grd== "SBSdk1" |beclabel_grd== "SBSdk2" |beclabel_grd== "SBSdw" |beclabel_grd== "SBSdw1" |beclabel_grd== "SBSdw2" |beclabel_grd== "SBSdw3" |beclabel_grd== "SBSmc"|beclabel_grd== "SBSmc1" |beclabel_grd== "SBSmc2" |beclabel_grd== "SBSmc3" |beclabel_grd== "SBSmh" |beclabel_grd== "SBSmk" |beclabel_grd== "SBSmk1" |beclabel_grd== "SBSmk2" |beclabel_grd== "SBSmm" |beclabel_grd== "SBSmw"|beclabel_grd== "SBSun" |beclabel_grd== "SBSvk" |beclabel_grd== "SBSvk1" |beclabel_grd== "SBSwk" |beclabel_grd== "SBSwk1" |beclabel_grd== "SBSwk2" |beclabel_grd== "SBSwk3" & bgc_ss_grd>0]
+
+table(criteria.samples$bgc_zone)
+table(criteria.samples$beclabel_grd)
+table(criteria.samples$bgc_ss_grd)
+
+criteria.samples <- uni.samples.dt[beclabel_grd== "SBS" |beclabel_grd== "SBS1" |beclabel_grd== "SBS2"|beclabel_grd== "SBS3" |beclabel_grd== "SBSdh1" |beclabel_grd== "SBSdh2" |beclabel_grd== "SBSdk" |beclabel_grd== "SBSdk1" |beclabel_grd== "SBSdk2" |beclabel_grd== "SBSdw" |beclabel_grd== "SBSdw1" |beclabel_grd== "SBSdw2" |beclabel_grd== "SBSdw3" |beclabel_grd== "SBSmc"|beclabel_grd== "SBSmc1" |beclabel_grd== "SBSmc2" |beclabel_grd== "SBSmc3" |beclabel_grd== "SBSmh" |beclabel_grd== "SBSmk" |beclabel_grd== "SBSmk1" |beclabel_grd== "SBSmk2" |beclabel_grd== "SBSmm" |beclabel_grd== "SBSmw"|beclabel_grd== "SBSun" |beclabel_grd== "SBSvk" |beclabel_grd== "SBSvk1" |beclabel_grd== "SBSwk" |beclabel_grd== "SBSwk1" |beclabel_grd== "SBSwk2" |beclabel_grd== "SBSwk3" & bgc_ss_grd>0]
+
+table(criteria.samples$bgc_zone)
+table(criteria.samples$bgc_ss_grd)
+
+ifelse(criteria.samples[,beclabel_grd]=="SBSmc2",criteria.samples[,aBGC_SS:=])
+
 ```
+
+
+```{r}
+aSMR_in <- fread("C:/Users/alana_laptop/Documents/Sync/BVRC/SORTIE position/Data/aSMR/aSMR_letters.csv", h=T)
+
+
+```
+
+
 
 Re-measurement criteria:
 
