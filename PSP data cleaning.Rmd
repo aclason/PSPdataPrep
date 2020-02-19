@@ -19,7 +19,8 @@ m.path <- "C:/Users/alana_laptop/Documents/"
 source(paste0(m.path,"GitHub/SORTIE-r/SORTIE-functions.R"))
 dat.type <- c("Sample","Trees")
 tsas <- c("03","12","14","20","24","26")
-#tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
+tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
+#("url = https://drive.google.com/drive/u/0/folders/1DgeDUB4l62P9uWXwE8OLEE720_aHa5xT")
 psp.dat <- import.psp(r.path = r.path, dat.type=dat.type, tsas=tsas)
 #result is psp.dat which contains [[1]]:Sample and [[2]]Trees
 unique(psp.dat[[1]]$tsa)
@@ -59,7 +60,7 @@ criteria.samples <- uni.samples.dt[beclabel_grd== "SBS" |beclabel_grd== "SBS1" |
 table(criteria.samples$bgc_zone)
 table(criteria.samples$bgc_ss_grd)
 
-ifelse(criteria.samples[,beclabel_grd]=="SBSmc2",criteria.samples[,aBGC_SS:=],)
+#ifelse(criteria.samples[,beclabel_grd]=="SBSmc2",criteria.samples[,aBGC_SS:=],)
 
 ```
 
@@ -84,7 +85,7 @@ remeas.samples <- remeas.samples[tot_period>=10]
 table(remeas.samples$bgc_ss_grd)
 
 #this is all the SBS plots with 02 call
-plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==1]$SAMP_ID)
+plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==2]$SAMP_ID)
 #plot.SORTIE <- plot.SORTIE[plot.SORTIE!="CMI5_0232_NFI"]
 #tree species
 tree.dat <- psp.dat[[2]]
