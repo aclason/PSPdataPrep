@@ -3,6 +3,8 @@ title: "PSP data cleaning"
 author: "A. Clason"
 date: "September 16, 2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 Libraries
 ```{r}
@@ -11,12 +13,11 @@ library(data.table)
 
 Import data
 ```{r}
-r.path <- "D:/PSP data/PSP csv/"
+r.path <- "D:/Sync/BVRC/SORTIE position/Data/PSP/PSP data/PSP csv/"
 #write an ifelse function to define machine path?
-m.path <- "C:/Users/Alana2012/ALANA_FILES/"
-m.path <- "C:/Users/alana_laptop/Documents/"
+m.path <- "C:/Users/Alana2012/ALANA_FILES/" #i can't remember what this is for...
+#m.path <- "C:/Users/alana_laptop/Documents/"
 
-source(paste0(m.path,"GitHub/SORTIE-r/SORTIE-functions.R"))
 dat.type <- c("Sample","Trees")
 tsas <- c("03","12","14","20","24","26")
 tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
@@ -49,6 +50,9 @@ criteria.samples <- uni.samples.dt[bgc_zone=="SBS"& bgc_ss_grd>0]
 table(criteria.samples$bgc_ss_grd)
 table(criteria.samples$beclabel)
 #All SBPS, SBS
+
+grep("S", (beclabel_grd=="SBPS"|beclabel_grd=="SBPSdc"|beclabel_grd=="SBPSmc" |beclabel_grd== "SBPSmk" |beclabel_grd== "SBPSmk1" |beclabel_grd== "SBPSmk3" |beclabel_grd== "SBPSxc" |beclabel_grd=="SBPSxc1" |beclabel_grd== "SBPSxc3" |beclabel_grd== "SBPSxc4" |beclabel_grd== "SBS" |beclabel_grd== "SBS1" |beclabel_grd== "SBS2"|beclabel_grd== "SBS3" |beclabel_grd== "SBSdh1" |beclabel_grd== "SBSdh2" |beclabel_grd== "SBSdk" |beclabel_grd== "SBSdk1" |beclabel_grd== "SBSdk2" |beclabel_grd== "SBSdw" |beclabel_grd== "SBSdw1" |beclabel_grd== "SBSdw2" |beclabel_grd== "SBSdw3" |beclabel_grd== "SBSmc"|beclabel_grd== "SBSmc1" |beclabel_grd== "SBSmc2" |beclabel_grd== "SBSmc3" |beclabel_grd== "SBSmh" |beclabel_grd== "SBSmk" |beclabel_grd== "SBSmk1" |beclabel_grd== "SBSmk2" |beclabel_grd== "SBSmm" |beclabel_grd== "SBSmw"|beclabel_grd== "SBSun" |beclabel_grd== "SBSvk" |beclabel_grd== "SBSvk1" |beclabel_grd== "SBSwk" |beclabel_grd== "SBSwk1" |beclabel_grd== "SBSwk2" |beclabel_grd== "SBSwk3"))
+
 criteria.samples <- uni.samples.dt[beclabel_grd=="SBPS"|beclabel_grd=="SBPSdc"|beclabel_grd=="SBPSmc" |beclabel_grd== "SBPSmk" |beclabel_grd== "SBPSmk1" |beclabel_grd== "SBPSmk3" |beclabel_grd== "SBPSxc" |beclabel_grd=="SBPSxc1" |beclabel_grd== "SBPSxc3" |beclabel_grd== "SBPSxc4" |beclabel_grd== "SBS" |beclabel_grd== "SBS1" |beclabel_grd== "SBS2"|beclabel_grd== "SBS3" |beclabel_grd== "SBSdh1" |beclabel_grd== "SBSdh2" |beclabel_grd== "SBSdk" |beclabel_grd== "SBSdk1" |beclabel_grd== "SBSdk2" |beclabel_grd== "SBSdw" |beclabel_grd== "SBSdw1" |beclabel_grd== "SBSdw2" |beclabel_grd== "SBSdw3" |beclabel_grd== "SBSmc"|beclabel_grd== "SBSmc1" |beclabel_grd== "SBSmc2" |beclabel_grd== "SBSmc3" |beclabel_grd== "SBSmh" |beclabel_grd== "SBSmk" |beclabel_grd== "SBSmk1" |beclabel_grd== "SBSmk2" |beclabel_grd== "SBSmm" |beclabel_grd== "SBSmw"|beclabel_grd== "SBSun" |beclabel_grd== "SBSvk" |beclabel_grd== "SBSvk1" |beclabel_grd== "SBSwk" |beclabel_grd== "SBSwk1" |beclabel_grd== "SBSwk2" |beclabel_grd== "SBSwk3" & bgc_ss_grd>0]
 
 table(criteria.samples$bgc_zone)
