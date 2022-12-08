@@ -10,35 +10,40 @@ Notes December 7, 2022.
 
 Objectives (I think):
 1. Figure out which PSPs meet some criteria (often based on BEC)
-2. Work through any other criteria for plot inclusion (might have to be Alana that does that?)
+2. Work through any additional criteria for plot inclusion (might have to be Alana that does that?)
+
+ex 1) For the edaphic paper, I need all PSPs in the SBS or SBPS that have a siteseries call of 01, 02, or 05/06
+ex 2) For another project, I need all PSPs that are in the ESSF. Might need to eliminate some PSPs if they're in different site series
+
 3. Create SORTIE starting conditions for each plot that meets the criteria
-4. Somewhere need to know how many years we need to run sortie for each PSP
-5. Export those csvs for use with makeFiles in the SORTIEparams repo
+4. Somewhere need to know how many years we need to run sortie for each PSP (there might be a function for that in SORTIE-HelperFunctions)
+5. Export those csvs so we can use makeFiles in the SORTIEparams repo to initiate new runs
+
+I think this .RMD is just about trying to figure out which PSP plots meet our criteria for use in a study. I haven't gone through it closely, but I think I read in all the data and then figured out which ones met the criteria. It will be common across different projects that we want to select PSPs based on their BEC classification. I'm wondering if we could make a function that only imports the sample data first (that tells us site details about the plot, but not individual tree measurements), and select the plots that are within the BEC zone of interest (The sel.psp function in SORTIE-HelperFunctions.R seems like it might do this already?)? I think having to specify the TSA ids would be nice to get rid of. Can we just look through all the sample csvs that are in a BEC xone of interest without specifying tsas?
+
+A lot of the names have . in them. I don't use that much anymore (i think I use more camelHumps).
+
+We won't need all of the functions in the SORTIE-HelperFunctions.R file, I just put it in here in case there are some that are useful. I haven't done the roxygen documentation for those functions yet. I also haven't worked on those functions in a few years, so very likely there are better ways of doing things.
+
+Once the workflow and functions have been developed, we need to properly document the functions. Because it's built as a package, you can insert your cursor within the function, go to Code > Insert Roxygen skeleton to have some of the details added automatically. We can schedule a time to go over some tricks for working in r packages.
 
 
-I think this .RMD is just about trying to figure out which PSP plots meet our criteria for use in a study. I haven't gone through it closely, but I think I read in all the data and then figured out which ones met the criteria. It will be common across different projects that we want to select PSPs based on their BEC classification. I'm wondering if we could make a function that only imports the sample data first (that tells us site details about the plot, but not individual tree measurements), and select the plots that are within the BEC zone of interest? I think having to specify the TSA ids would be nice to get rid of. Can we just look through all the sample csvs that are in a BEC xone of interest without specifying tsas?
-
-The sel.psp function in SORTIE-HelperFunctions.R seems like it might do this already?
-
-A lot of the names have . in them...I don't use that much anymore, as I think it's harder to read. 
-
-We won't need all of the functions in the SORTIE-HelperFunctions.R file, I just put it in here in case there are some that are useful. I haven't done the roxygen documentation for those functions yet. I also haven't worked on those functions in a few years, so very likely better ways of doing things.
 
 
 ```{r}
 library(data.table)
+
 ```
 
 Import data
 ```{r}
 dat_path <- "D:/Sync/BVRC/SORTIE position/Data/PSP/PSP data/PSP csv/"
-#write an ifelse function to define machine path?
 #m.path <- "C:/Users/Alana2012/ALANA_FILES/" #i can't remember what this is for...
 #m.path <- "C:/Users/alana_laptop/Documents/"
 
 data_t <- c("Sample","Trees")
 tsas <- c("03","12","14","20","24","26")
-tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
+#tsas <- c("03","04","05","07","08","09","10","11","12","13","14","15","16","17","18","20","22","23","24","25","26","27","29","30","31","38","39","40","41","43","44","45","46","47","48")
 #("url = https://drive.google.com/drive/u/0/folders/1DgeDUB4l62P9uWXwE8OLEE720_aHa5xT")
 psp.dat <- importPSP(data_path = dat_path, data_type = data_t, tsas=tsas)
 
@@ -185,6 +190,7 @@ remeas.samples[which(remeas.samples[,bgc_ss_grd==2]),SAMP_ID]
 ```
 
 Eclipse crew: I think you can ignore this next chunk for now
+
 SITE INDEX APPROACH:
 
 Doing the same steps, but figuring out how many more or different plots meet the criteria if we include SI
