@@ -23,6 +23,16 @@ import.SORTIE.output <- function(yr,folder.path,fl.name){
 }
 
 #Import selected years (= yrs object) from a SORTIE run
+#' Title
+#'
+#' @param yrs
+#' @param folder.path
+#' @param fl.name
+#'
+#' @return
+#' @export
+#'
+#' @examples
 import_Yrs_SORTIE <- function(yrs,folder.path,fl.name){
   dt_sites2 <- list()
   dt_list <- list()
@@ -80,13 +90,13 @@ clean.sp.labels <- function(tree.dat){
 sel.psp <- function(samples.dt,tree.dat,BECzone,BEClabel,SiteSeriesOfInterest,MinRemeasInterval){
   # Remove repeats (which I think represent sub-plots)
   uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
-  #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent 
+  #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent
   if(!is.null(BECzone)){criteria.samples <- uni.samples.dt[bgc_zone ==BECzone & bgc_ss_grd>0] #02
   } else{criteria.samples <- uni.samples.dt[beclabel_grd == BEClabel & bgc_ss_grd>0]} #05/06
   remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
   remeas.samples <- remeas.samples[tot_period>=MinRemeasInterval & treatment != "THINNED" & stnd_org!="P"]
   plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==SiteSeriesOfInterest]$SAMP_ID)
-  
+
   #remove plots based on composition: actually just need to remove from plotID
   # c("XC","CW")
   #plot.SORTIE <- tree.dat[samp_id %in% ]
@@ -94,7 +104,7 @@ sel.psp <- function(samples.dt,tree.dat,BECzone,BEClabel,SiteSeriesOfInterest,Mi
   #remove plots based on composition: actually just need to remove from plotID
   #rm.plot <- unique(tree.dat[which(tree.dat[,species==.("XC","CW")]),.(samp_id)])
   #tree.dat <- tree.dat[!rm.plot]
-  
+
   return(plot.SORTIE)
 }
 
@@ -139,7 +149,7 @@ SORTIE.tree.create <- function(sizeClasses,SORTIE.species,Min.Adult.DBH,Max.Seed
   Init.Dens.Seedling.Hgt.Class.2 <- rep(0, length(SORTIE.species))
   Init.Dens.Seedling.Hgt.Class.3 <- rep(0, length(SORTIE.species))
   Init.Dens.Seedling <- rep(0, length(SORTIE.species))
-  
+
   inits <- vector()
   init.values <- matrix(nrow=length(sizeClasses),ncol=length(SORTIE.species))
   for(i in 1:length(sizeClasses)){
@@ -149,7 +159,7 @@ SORTIE.tree.create <- function(sizeClasses,SORTIE.species,Min.Adult.DBH,Max.Seed
   for(j in 1:length(SORTIE.species)){
     init.values[,j] <- rep(0, length(inits))
   }
-  
+
   # Now create the data.table of parameter values that vary
   SORTIE.tree.dat <- data.table()
   SORTIE.tree.dat <- rbind(Min.Adult.DBH,Max.Seedling.Hgt.m,Init.Dens.Seedling.Hgt.Class.1,
@@ -209,16 +219,16 @@ create.SORTIE.DBH.classes <- function(sizeClasses,dbhclassSize,SORTIE.tree.dat,a
   SORTIE.tree.dat.list <- list()
   for(i in 1: length(meas.no)){
     yr.meas.sortis <- all.meas.plot.SORTIE[meas_no==i-1]
-    
+
     for(j in 1:length(sizeClasses)){
       yr.meas.sortis[dbh <= sizeClasses[j] & dbh > sizeClasses[j]-dbhclassSize,DBH_bin := j]
     }
-    tree.per.bin <- yr.meas.sortis[,.N, by=.(DBH_bin,sp_PSP)] 
+    tree.per.bin <- yr.meas.sortis[,.N, by=.(DBH_bin,sp_PSP)]
     tree.per.bin[,Trees.per.ha := N*main.plot.phf]
     setkey(tree.per.bin,sp_PSP,DBH_bin)
-    
+
     SORTIE.tree.dat.list[[i]] <- SORTIE.tree.dat
-    
+
     for(k in 1:nrow(tree.per.bin)){
       SORTIE.tree.dat.list[[i]][6+tree.per.bin[k,DBH_bin],tree.conv.table[PSP.species==tree.per.bin[k,sp_PSP],SORTIE.species]] <- tree.per.bin[k,Trees.per.ha]
     }
@@ -231,16 +241,16 @@ create.SORTIE.DBH.classes.Meas0 <- function(sizeClasses,dbhclassSize,SORTIE.tree
   SORTIE.tree.dat.list <- list()
   #for(i in 1: length(meas.no)){
     yr.meas.sortis <- all.meas.plot.SORTIE[meas_no==0]
-    
+
     for(j in 1:length(sizeClasses)){
       yr.meas.sortis[dbh <= sizeClasses[j] & dbh > sizeClasses[j]-dbhclassSize,DBH_bin := j]
     }
-    tree.per.bin <- yr.meas.sortis[,.N, by=.(DBH_bin,sp_PSP)] 
+    tree.per.bin <- yr.meas.sortis[,.N, by=.(DBH_bin,sp_PSP)]
     tree.per.bin[,Trees.per.ha := N*main.plot.phf]
     setkey(tree.per.bin,sp_PSP,DBH_bin)
-    
+
     SORTIE.tree.dat.list <- SORTIE.tree.dat
-    
+
     for(k in 1:nrow(tree.per.bin)){
       SORTIE.tree.dat.list[tree.per.bin[k,DBH_bin],tree.conv.table[PSP.species==tree.per.bin[k,sp_PSP],SORTIE.species]] <- tree.per.bin[k,Trees.per.ha]
     }
@@ -275,7 +285,7 @@ old.create.SORTIE.DBH.classes <- function(tree.dat,num.meas,sizeClasses,SORTIE.t
       tree.per.bin <- ld.red.plot.SORTIE.meas[,.N, by=.(DBH_bin,sp_PSP)]
       tree.per.bin[,Trees.per.ha := N*main.plot.phf]
       setkey(tree.per.bin,sp_PSP,DBH_bin)
-      
+
       SORTIE.tree.dat.list[[i]] <- SORTIE.tree.dat
       for(k in 1:nrow(tree.per.bin)){
         SORTIE.tree.dat.list[[i]][6+tree.per.bin[k,DBH_bin],tree.conv.table[PSP.species==tree.per.bin[k,sp_PSP],SORTIE.species]] <- tree.per.bin[k,Trees.per.ha]
