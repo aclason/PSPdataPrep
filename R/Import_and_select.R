@@ -8,24 +8,27 @@
 #'This function imports PSP sample data
 #'
 #' @param data_path Path to PSP sample data
-#' @param data_type
-#' @param tsas TSA(s) to be imported
+#' @param data_type is it trees or samples. default is trees
+#' @param tsas TSA(s) to be imported (vector of characters). default is import all
+#'
+#' @details
+#' Just pass the TSA number if want to overide importing all the data
 #'
 #' @return
 #' @export
 #'
 #' @examples
-importPSP <- function(data_path, data_type, tsas){
-  read.list <- list()
-  dat.list <- list()
-  for(i in 1:length(data_type)){
-    #setwd(paste0(r.path,dat.type[i]))
-    for(j in 1:length(tsas)){
-      read.list[[j]]<- fread(paste0(data_path,"/", data_type[i],"/","TSA",tsas[j],".csv"))
-    }
-    dat.list[[i]] <- rbindlist(read.list)
+importPSP <- function(data_path, data_type = "Trees", tsas = TRUE){
+  if(tsas){
+    tsa_r <- list.files(paste0(datpath,data_type), full.names = TRUE)
+  }else{
+    tsa_r <- paste0(datpath,data_type,"/TSA",tsas,".csv")
   }
-  return(dat.list)
+
+  read_tsa <- lapply(tsa_r, data.table::fread)
+  tsa_dt <- do.call(rbind, read_tsa)
+
+  return(tsa_dt)
 }
 
 
