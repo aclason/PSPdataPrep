@@ -22,7 +22,7 @@ import_psps <- function(data_path, data_type = "Trees", tsas = TRUE){
   if(tsas){
     tsa_r <- list.files(paste0(datpath,data_type), full.names = TRUE)
   }else{
-    tsa_r <- paste0(datpath,data_type,"/TSA",tsas,".csv")
+    tsa_r <- paste0(datpath, data_type, "/TSA", tsas,".csv")
   }
 
   read_tsa <- lapply(tsa_r, data.table::fread)
@@ -41,33 +41,71 @@ import_psps <- function(data_path, data_type = "Trees", tsas = TRUE){
 #' This function selects PSP sample plots based on criteria and cleans data
 #'
 #' @param samples_data Imported sample data output by importPSP function
-#' @param BECzone BEC zone(s) to be selected
-#' @param BEClabel BEC label(s) to be selected
+#' @param BECzone BEC zone(s) to be selected. Required. can be a vector of multiple zones
+#' @param BEClabel BEC label(s) to be selected. Required. can be a vector of multiple subzones
 #' @param site_series Site series of interest to be selected
 #' @param min_remeasure Minimum remeasurement interval for selected plots
-#'
-#' @return
+#' @param treatments Options = "THINNED" or "none" for untreated (default)
+#' @param stand_origin Options = "P" for plantations or "untreated" for untreated (default)
+#' @returns description
 #' @export
 #'
+#' @details
+#' bgc_ss_grd is the site series call - right now, this can't be NA (only true for edaphic paper)
+#' beclabel	Concatanation of (BGC_zone + BGC_sbzn + BGC_var), based on provincial BEC coverage if ground sample coordinates available, otherwise ground sample based
+#' beclabel_grd	concatanation of (BGC_zone_grd + BGC_sbzn_grd + BGC_var_grd), ground sample based classification
+#'
 #' @examples
-select_psps <- function(samples_data, BECzone, BEClabel, site_series,
-                    min_remeasure){
-  # Remove repeats (which I think represent sub-plots)
-  uni.samples.dt<-unique(samples_data, by="SAMP_ID")
-  # create the list of criteria needed to determine whether a plot should be included.
-  # This assumes that coding is consistent
-  if(!is.null(BECzone)){
-    criteria.samples <- uni.samples.dt[[1]][bgc_zone == BECzone & bgc_ss_grd>0] #02
+select_psps <- function(samples_data, BECzone, BECsubzone, site_series,
+                    min_remeasure, treatments = "none",
+                    stand_origin = "untreated"){
 
-  } else {
-    criteria.samples <- uni.samples.dt[[1]][beclabel_grd == BEClabel & bgc_ss_grd>0] #05/06
+  # Remove repeats (which I think represent sub-plots)
+  uni.samples.dt <- unique(samples_data, by="SAMP_ID")
+
+  # bec zone
+  bl <- uni.samples.dt[like(beclabel, BECzone, ignore.case = TRUE)]
+  blg <- uni.samples.dt[like(beclabel_grd, BECzone, ignore.case = TRUE)]
+  bl_blg <- unique(rbind(bl,blg))
+
+  # becsubzone
+  combined_condition <- paste(BECsubzone,collapse = "|")
+  bl_s <- bl_blg[like(beclabel, combined_condition, ignore.case = TRUE)]
+  blg_s <- bl_blg[like(beclabel_grd, combined_condition, ignore.case = TRUE)]
+  bl_blg_s <- unique(rbind(bl_s,blg_s))
+
+  #end up with some random calls, so clean again
+  combined_condition <- paste0(BECzone, BECsubzone, collapse = "|")
+  zs <- bl_blg_s[like(beclabel, combined_condition, ignore.case = TRUE)]
+
+
+  #if site series passed
+  if(!is.null(site_series)){
+    combined_condition <- paste("bgc_ss_grd","==",site_series, collapse = "|")
+    zs_ss <-  zs[eval(parse(text = combined_condition))]
+
+    #has there been more than one measurement?
+    remeas.samples <- zs_ss[(zs_ss[,meas_yr_first]!= zs_ss[,meas_yr_last])]
+  }else{
+    remeas.samples <- zs[(zs[,meas_yr_first]!= zs[,meas_yr_last])]
   }
 
-  remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=
-                                        criteria.samples[,meas_yr_last])]
-  remeas.samples <- remeas.samples[tot_period >= min_remeasure & treatment !=
-                                     "THINNED" & stnd_org!="P"]
-  plot.SORTIE <- unique(remeas.samples[bgc_ss_grd == site_series]$SAMP_ID)
+  #has it been measured for longer than the minimum amount?
+  rs_min <- remeas.samples[tot_period >= min_remeasure]
+
+  if(stand_origin == "untreated"){
+    rs_min_so <- rs_min[stnd_org != "P"]
+  }else{
+    rs_min_so <- rs_min[stnd_org == stand_origin]
+  }
+
+  if(treatments == "none"){
+    rs_min_so_t <- rs_min_so[treatment == "UNTREATED"]
+  }else{
+    rs_min_so_t <- rs_min_sp[treatment == "THINNED"]
+  }
+
+  selected_psp_plots <- unique(rs_min$SAMP_ID)
 
   #remove plots based on composition: actually just need to remove from plotID
   # c("XC","CW")
@@ -77,7 +115,7 @@ select_psps <- function(samples_data, BECzone, BEClabel, site_series,
   #rm.plot <- unique(tree.dat[which(tree.dat[,species==.("XC","CW")]),.(samp_id)])
   #tree.dat <- tree.dat[!rm.plot]
 
-  return(plot.SORTIE)
+  return(selected_psp_plots)
 }
 
 
