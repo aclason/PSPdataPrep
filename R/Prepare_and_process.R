@@ -2,33 +2,38 @@
 
 ## These functions need some more clean up and testing
 
-## Prepare tree data for import into SORTIE.tree.create
+## Prepare tree data for import into tree_list_sortie
 #' Title Prepare Tree Data for Import
 #'
-#' This function prepares selected tree data for import into SORTIE.tree.create
 #'
-#' @param tree.dat Tree data imported for selected sample plots
-#' @param study.plots Sample plots selected in sel.psp function
+#' @param data_path Path to tree data
+#' @param tsas TSAs to select tree data for
+#' @param selected_plots Plot names selected in sel.psp function
 #'
 #' @return
 #' @export
 #'
 #' @examples
-psp.meas <- function(tree.dat,study.plots){
+psp_tree_meas <- function(data_path, tsas, selected_plots){
+
+  tree.dat <- import_trees(data_path = data_path,
+                           tsas = tsas,
+                           selected_plots = selected_plots)
+
   live.Plot.ReMeas.list <- list()
-  for(k in 1:length(study.plots)){
-    num.meas <- length(unique(tree.dat[samp_id==study.plots[k],meas_no]))
+  for(k in 1:length(selected_plots)){
+    num.meas <- length(unique(tree.dat[samp_id==selected_plots[k],meas_no]))
     Plot.ReMeas.list <- list()
     for(i in 1:num.meas){
-      study.plots.meas <- tree.dat[samp_id==study.plots[k] & meas_no==(i-1)]
-      study.plots.meas[,LD_Group:=ifelse(ld=="L",1,ifelse(ld=="I",1,ifelse(ld=="V",1,2)))]
+      selected_plots.meas <- tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]
+      selected_plots.meas[,LD_Group:=ifelse(ld=="L",1,ifelse(ld=="I",1,ifelse(ld=="V",1,2)))]
       #in below line, changes sp_PSP to species
-      red.study.plots.meas <- study.plots.meas[,.(samp_id,tree_no,meas_yr,meas_no,phf_tree,species,dbh,ld,
+      red.selected_plots.meas <- selected_plots.meas[,.(samp_id,tree_no,meas_yr,meas_no,phf_tree,species,dbh,ld,
                                                   LD_Group,age_tot,height,batree,baha,volwsv,volcu10m,
                                                   volcu15m,wsvha,gmv10ha,gmv15ha,nmv10ha,nmv15ha)]
       #just main plot trees
-      main.plot.phf <- min(na.omit(tree.dat[samp_id==study.plots[k] & meas_no==(i-1)]$phf_tree))
-      Plot.ReMeas.list[[i]] <- red.study.plots.meas[round(phf_tree) == round(main.plot.phf)]
+      main.plot.phf <- min(na.omit(tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]$phf_tree))
+      Plot.ReMeas.list[[i]] <- red.selected_plots.meas[round(phf_tree) == round(main.plot.phf)]
     }
     Plot.ReMeas.tab <- rbindlist(Plot.ReMeas.list)
     #return(Plot.ReMeas.tab)
@@ -48,7 +53,7 @@ psp.meas <- function(tree.dat,study.plots){
   }
   #make a single data table for PSP plot remeasurements:
   cleaned.psp.remeas <- rbindlist(live.Plot.ReMeas.list)
-  #return(cleaned.psp.remeas)
+  return(cleaned.psp.remeas)
 }
 
 
@@ -58,15 +63,15 @@ psp.meas <- function(tree.dat,study.plots){
 
 #' Title Create initial tree population table for SORTIE model
 #'
-#' @param sizeClasses Vector of desired size classes
-#' @param SORTIE.species
+#' @param size_classes Vector of desired size classes
+#' @param sorite_sp_names
 #' @param PSP.measurements
 #'
 #' @return
 #' @export
 #'
 #' @examples
-SORTIE.tree.create <- function(sizeClasses,SORTIE.species, PSP.measurements){
+tree_list_sortie <- function(sizeClasses,SORTIE.species, PSP.measurements){
 
   #extract min adult DBH
   Min.Adult.DBH = PSP.measurements %>%
@@ -101,7 +106,8 @@ SORTIE.tree.create <- function(sizeClasses,SORTIE.species, PSP.measurements){
   # Now create the data.table of parameter values that vary
   SORTIE.tree.dat <- data.table()
   SORTIE.tree.dat <- rbind(Min.Adult.DBH,Max.Seedling.Hgt.m,Init.Dens.Seedling.Hgt.Class.1,
-                           Init.Dens.Seedling.Hgt.Class.2,Init.Dens.Seedling.Hgt.Class.3,Init.Dens.Seedling,init.values)
+                           Init.Dens.Seedling.Hgt.Class.2,Init.Dens.Seedling.Hgt.Class.3,
+                           Init.Dens.Seedling,init.values)
   colnames(SORTIE.tree.dat)<-SORTIE.species
   return(SORTIE.tree.dat)
 }
@@ -114,15 +120,15 @@ SORTIE.tree.create <- function(sizeClasses,SORTIE.species, PSP.measurements){
 #'
 #' This function exports initial SORTIE starting conditions as a CSV
 #'
-#' @param SORTIE.plot Initial SORTIE starting conditions plot exported from SORTIE.tree.create
+#' @param tree_lists Initial SORTIE starting conditions plot exported from tree_list_sortie
 #'
 #' @return
 #' @export
 #'
 #' @examples
-write.psp <- function(SORTIE.plot){
+export_tree_list <- function(tree_lists){
 
-  write.csv(SORTIE.plot, "psp_output_for_SORTIE.csv")
+  write.csv(tree_lists, "tree_lists_SORTIE.csv")
 
 }
 
@@ -140,7 +146,7 @@ write.psp <- function(SORTIE.plot){
 #' @export
 #'
 #' @examples
-psp.years.age <- function(plot.SORTIE,tree.dat,samples.dt,age.crit){
+psp_remeas_years <- function(plot.SORTIE,tree.dat,samples.dt,age.crit){
   #make the right output for print functions
   psp.dets <- list()
   sp_comp_list <-list()
