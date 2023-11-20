@@ -18,7 +18,7 @@
 #' @export
 #'
 #' @examples
-importPSP <- function(data_path, data_type = "Trees", tsas = TRUE){
+import_psps <- function(data_path, data_type = "Trees", tsas = TRUE){
   if(tsas){
     tsa_r <- list.files(paste0(datpath,data_type), full.names = TRUE)
   }else{
@@ -91,7 +91,7 @@ select_psps <- function(samples_data, BECzone, BEClabel, site_series,
 #'
 #' This function imports PSP tree data corresponding to selected sample plots
 #'
-#' @param tree_data_path Path to tree data
+#' @param data_path Path to tree data
 #' @param tsas TSAs to select tree data for
 #' @param selected_plots Plot names selected in sel.psp function
 #'
@@ -99,12 +99,12 @@ select_psps <- function(samples_data, BECzone, BEClabel, site_series,
 #' @export
 #'
 #' @examples
-importTrees <- function(tree_data_path, tsas, selected_plots){
+import_trees <- function(data_path, tsas, selected_plots){
   read.list <- list()
   #  dat.list <- list()
   # for(i in 1:length(selected_plots)){
   for(j in 1:length(tsas)){
-    read.list[[j]]<- fread(paste0(tree_data_path,"/","/","TSA",tsas[j],".csv"))
+    read.list[[j]]<- fread(paste0(data_path,"/","/","TSA",tsas[j],".csv"))
   }
   dat.list <- rbindlist(read.list)
 
