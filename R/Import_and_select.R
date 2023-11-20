@@ -40,26 +40,34 @@ importPSP <- function(data_path, data_type = "Trees", tsas = TRUE){
 #'
 #' This function selects PSP sample plots based on criteria and cleans data
 #'
-#' @param samples.dt Imported sample data output by importPSP function
-#' @param tree.dat
+#' @param samples_data Imported sample data output by importPSP function
 #' @param BECzone BEC zone(s) to be selected
 #' @param BEClabel BEC label(s) to be selected
-#' @param SiteSeriesOfInterest Site series of interest to be selected
-#' @param MinRemeasInterval Minimum remeasurement interval for selected plots
+#' @param site_series Site series of interest to be selected
+#' @param min_remeasure Minimum remeasurement interval for selected plots
 #'
 #' @return
 #' @export
 #'
 #' @examples
-sel.psp <- function(samples.dt,tree.dat,BECzone,BEClabel,SiteSeriesOfInterest,MinRemeasInterval){
+select_psps <- function(samples_data, BECzone, BEClabel, site_series,
+                    min_remeasure){
   # Remove repeats (which I think represent sub-plots)
-  uni.samples.dt<-unique(samples.dt, by="SAMP_ID")
-  #create the list of criteria needed to determine whether a plot should be included. This assumes that coding is consistent
-  if(!is.null(BECzone)){criteria.samples <- uni.samples.dt[[1]][bgc_zone == BECzone & bgc_ss_grd>0] #02
-  } else{criteria.samples <- uni.samples.dt[[1]][beclabel_grd == BEClabel & bgc_ss_grd>0]} #05/06
-  remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=criteria.samples[,meas_yr_last])]
-  remeas.samples <- remeas.samples[tot_period>=MinRemeasInterval & treatment != "THINNED" & stnd_org!="P"]
-  plot.SORTIE <- unique(remeas.samples[bgc_ss_grd==SiteSeriesOfInterest]$SAMP_ID)
+  uni.samples.dt<-unique(samples_data, by="SAMP_ID")
+  # create the list of criteria needed to determine whether a plot should be included.
+  # This assumes that coding is consistent
+  if(!is.null(BECzone)){
+    criteria.samples <- uni.samples.dt[[1]][bgc_zone == BECzone & bgc_ss_grd>0] #02
+
+  } else {
+    criteria.samples <- uni.samples.dt[[1]][beclabel_grd == BEClabel & bgc_ss_grd>0] #05/06
+  }
+
+  remeas.samples <- criteria.samples[(criteria.samples[,meas_yr_first]!=
+                                        criteria.samples[,meas_yr_last])]
+  remeas.samples <- remeas.samples[tot_period >= min_remeasure & treatment !=
+                                     "THINNED" & stnd_org!="P"]
+  plot.SORTIE <- unique(remeas.samples[bgc_ss_grd == site_series]$SAMP_ID)
 
   #remove plots based on composition: actually just need to remove from plotID
   # c("XC","CW")
