@@ -8,7 +8,6 @@
 #'This function imports PSP sample data
 #'
 #' @param data_path Path to PSP sample data
-#' @param data_type is it trees or samples. default is trees
 #' @param tsas TSA(s) to be imported (vector of characters). default is import all
 #'
 #' @details
@@ -18,14 +17,19 @@
 #' @export
 #'
 #' @examples
-import_psps <- function(data_path, data_type = "Trees", tsas = TRUE){
+import_psps <- function(data_path, tsas = TRUE){
+
   if(tsas){
-    tsa_r <- list.files(paste0(datpath,data_type), full.names = TRUE)
+    tsa_r <- list.files(paste0(datpath,"Sample"), full.names = TRUE)
   }else{
-    tsa_r <- paste0(datpath, data_type, "/TSA", tsas,".csv")
+    tsa_r <- paste0(datpath, "Sample", "/TSA", tsas,".csv")
   }
 
-  read_tsa <- lapply(tsa_r, data.table::fread)
+  read_tsa <- lapply(tsa_r, function(file){
+    dt <- fread(file)
+    dt[, FileName := basename(file)]
+    return(dt)
+    })
   tsa_dt <- do.call(rbind, read_tsa)
 
   return(tsa_dt)
@@ -138,22 +142,32 @@ select_psps <- function(samples_data, BECzone, BECsubzone, site_series,
 #'
 #' @examples
 import_trees <- function(data_path, tsas, selected_plots){
-  read.list <- list()
-  #  dat.list <- list()
-  # for(i in 1:length(selected_plots)){
-  for(j in 1:length(tsas)){
-    read.list[[j]]<- fread(paste0(data_path,"/","/","TSA",tsas[j],".csv"))
-  }
-  dat.list <- rbindlist(read.list)
 
-  selected_plots = selected_plots %>%
-    as.data.frame() %>%
-    rename("samp_id" = ".")
+  #if the name contains the csv extension:
+  if(all(stringr::str_detect(tsas, "\\.csv$"))){
+    file_list <- list.files(paste0(data_path,"Trees"))
+    tsa_use <- file_list %in% tsas
+    file_list <- list.files(paste0(data_path,"Trees"), full.names = TRUE)
+    read_trees <- lapply(file_list[tsa_use], fread)
+
+  } else {
+    #haven't fixed the else yet
+    for(j in 1:length(tsas)){
+      read_trees[[j]]<- fread(paste0(data_path,"/","/","TSA",tsas[j],".csv"))
+    }
+  }
+  trees_dt <- do.call(rbind, read_trees)
+
+  trees_dt <- trees_dt[samp_id %in% selected_plots]
+
+  #selected_plots = selected_plots %>%
+   # as.data.frame() %>%
+  #  rename("samp_id" = ".")
 
   # not sure if this is right, don't know how big it should be
-  dat.list = dat.list[dat.list$samp_id %in% selected_plots$samp_id]
+  #dat.list = dat.list[dat.list$samp_id %in% selected_plots$samp_id]
 
-  return(dat.list)
+  return(trees_dt)
 }
 
 

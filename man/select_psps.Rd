@@ -4,19 +4,39 @@
 \alias{select_psps}
 \title{Title Select and Clean PSP Sample Data}
 \usage{
-select_psps(samples_data, BECzone, BEClabel, site_series, min_remeasure)
+select_psps(
+  samples_data,
+  BECzone,
+  BECsubzone,
+  site_series,
+  min_remeasure,
+  treatments = "none",
+  stand_origin = "untreated"
+)
 }
 \arguments{
 \item{samples_data}{Imported sample data output by importPSP function}
 
-\item{BECzone}{BEC zone(s) to be selected}
-
-\item{BEClabel}{BEC label(s) to be selected}
+\item{BECzone}{BEC zone(s) to be selected. Required. can be a vector of multiple zones}
 
 \item{site_series}{Site series of interest to be selected}
 
 \item{min_remeasure}{Minimum remeasurement interval for selected plots}
+
+\item{treatments}{Options = "THINNED" or "none" for untreated (default)}
+
+\item{stand_origin}{Options = "P" for plantations or "untreated" for untreated (default)}
+
+\item{BEClabel}{BEC label(s) to be selected. Required. can be a vector of multiple subzones}
+}
+\value{
+description
 }
 \description{
 This function selects PSP sample plots based on criteria and cleans data
+}
+\details{
+bgc_ss_grd is the site series call - right now, this can't be NA (only true for edaphic paper)
+beclabel	Concatanation of (BGC_zone + BGC_sbzn + BGC_var), based on provincial BEC coverage if ground sample coordinates available, otherwise ground sample based
+beclabel_grd	concatanation of (BGC_zone_grd + BGC_sbzn_grd + BGC_var_grd), ground sample based classification
 }

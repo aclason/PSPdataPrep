@@ -4,12 +4,10 @@
 \alias{import_psps}
 \title{Title Import PSP Sample Data}
 \usage{
-import_psps(data_path, data_type = "Trees", tsas = TRUE)
+import_psps(data_path, tsas = TRUE)
 }
 \arguments{
 \item{data_path}{Path to PSP sample data}
-
-\item{data_type}{is it trees or samples. default is trees}
 
 \item{tsas}{TSA(s) to be imported (vector of characters). default is import all}
 }

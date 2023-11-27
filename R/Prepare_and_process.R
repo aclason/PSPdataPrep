@@ -16,44 +16,52 @@
 #' @examples
 psp_tree_meas <- function(data_path, tsas, selected_plots){
 
-  tree.dat <- import_trees(data_path = data_path,
-                           tsas = tsas,
-                           selected_plots = selected_plots)
+  tree.dat <- import_trees(data_path = datpath,
+                           tsas = tsas_sel,
+                           selected_plots = selected_psps)
 
-  live.Plot.ReMeas.list <- list()
-  for(k in 1:length(selected_plots)){
-    num.meas <- length(unique(tree.dat[samp_id==selected_plots[k],meas_no]))
-    Plot.ReMeas.list <- list()
-    for(i in 1:num.meas){
-      selected_plots.meas <- tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]
-      selected_plots.meas[,LD_Group:=ifelse(ld=="L",1,ifelse(ld=="I",1,ifelse(ld=="V",1,2)))]
+  tree.dat <- tree.dat[,.(samp_id, tree_no, meas_yr, meas_no, phf_tree,
+                          species, dbh, height, ld, age_tot)]
+
+  tree.dat[, live_dead := ifelse(ld == "L", 1, ifelse(ld == "I", 1,
+                                                  ifelse(ld == "V", 1, 2)))]
+
+  return(tree.dat)
+
+ # live.Plot.ReMeas.list <- list()
+#  for(k in 1:length(selected_plots)){
+ #   num.meas <- length(unique(tree.dat[samp_id==selected_plots[k],meas_no]))
+#    Plot.ReMeas.list <- list()
+#    for(i in 1:num.meas){
+ #     selected_plots.meas <- tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]
+  #    selected_plots.meas[,LD_Group:=ifelse(ld=="L",1,ifelse(ld=="I",1,ifelse(ld=="V",1,2)))]
       #in below line, changes sp_PSP to species
-      red.selected_plots.meas <- selected_plots.meas[,.(samp_id,tree_no,meas_yr,meas_no,phf_tree,species,dbh,ld,
-                                                  LD_Group,age_tot,height,batree,baha,volwsv,volcu10m,
-                                                  volcu15m,wsvha,gmv10ha,gmv15ha,nmv10ha,nmv15ha)]
+   #   red.selected_plots.meas <- selected_plots.meas[,.(samp_id,tree_no,meas_yr,meas_no,phf_tree,species,dbh,ld,
+  #                                                LD_Group,age_tot,height,batree,baha,volwsv,volcu10m,
+  #                                                volcu15m,wsvha,gmv10ha,gmv15ha,nmv10ha,nmv15ha)]
       #just main plot trees
-      main.plot.phf <- min(na.omit(tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]$phf_tree))
-      Plot.ReMeas.list[[i]] <- red.selected_plots.meas[round(phf_tree) == round(main.plot.phf)]
-    }
-    Plot.ReMeas.tab <- rbindlist(Plot.ReMeas.list)
+  #    main.plot.phf <- min(na.omit(tree.dat[samp_id==selected_plots[k] & meas_no==(i-1)]$phf_tree))
+  #    Plot.ReMeas.list[[i]] <- red.selected_plots.meas[round(phf_tree) == round(main.plot.phf)]
+  #  }
+   # Plot.ReMeas.tab <- rbindlist(Plot.ReMeas.list)
     #return(Plot.ReMeas.tab)
-    live.Plot.ReMeas <- Plot.ReMeas.tab[LD_Group==1]
-    for(j in 1:nrow(live.Plot.ReMeas)){
-      if(live.Plot.ReMeas[j,species] == "SX"){
-        live.Plot.ReMeas[j, Type :=  ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh < 3.0],"Sapling",
-                                            ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh >= 3.0],"Adult",
-                                                   "Seedling"))]
-      } else {
-        live.Plot.ReMeas[j, Type :=  ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh < 5.0],"Sapling",
-                                            ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh >= 5.0],"Adult",
-                                                   "Seedling"))]
-      }
-    }
-    live.Plot.ReMeas.list[[k]] <- live.Plot.ReMeas
-  }
+   # live.Plot.ReMeas <- Plot.ReMeas.tab[LD_Group==1]
+  #  for(j in 1:nrow(live.Plot.ReMeas)){
+   #   if(live.Plot.ReMeas[j,species] == "SX"){
+    #    live.Plot.ReMeas[j, Type :=  ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh < 3.0],"Sapling",
+     #                                       ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh >= 3.0],"Adult",
+      #                                             "Seedling"))]
+    #  } else {
+    #    live.Plot.ReMeas[j, Type :=  ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh < 5.0],"Sapling",
+     #                                       ifelse(live.Plot.ReMeas[j,height >=1.35 & dbh >= 5.0],"Adult",
+    #                                               "Seedling"))]
+    #  }
+  #  }
+  #  live.Plot.ReMeas.list[[k]] <- live.Plot.ReMeas
+#  }
   #make a single data table for PSP plot remeasurements:
-  cleaned.psp.remeas <- rbindlist(live.Plot.ReMeas.list)
-  return(cleaned.psp.remeas)
+ # cleaned.psp.remeas <- rbindlist(live.Plot.ReMeas.list)
+  #return(cleaned.psp.remeas)
 }
 
 
