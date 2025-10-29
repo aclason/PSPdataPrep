@@ -6,9 +6,9 @@
 \usage{
 select_psps(
   samples_data,
-  BECzone,
-  BECsubzone,
-  site_series,
+  BECzone = NULL,
+  BECsubzone = NULL,
+  site_series = NULL,
   min_remeasure,
   treatments = "none",
   stand_origin = "untreated"
@@ -19,6 +19,8 @@ select_psps(
 
 \item{BECzone}{BEC zone(s) to be selected. Required. can be a vector of multiple zones}
 
+\item{BECsubzone}{BEC label(s) to be selected. Required. can be a vector of multiple subzones}
+
 \item{site_series}{Site series of interest to be selected}
 
 \item{min_remeasure}{Minimum remeasurement interval for selected plots}
@@ -26,8 +28,6 @@ select_psps(
 \item{treatments}{Options = "THINNED" or "none" for untreated (default)}
 
 \item{stand_origin}{Options = "P" for plantations or "untreated" for untreated (default)}
-
-\item{BEClabel}{BEC label(s) to be selected. Required. can be a vector of multiple subzones}
 }
 \value{
 description

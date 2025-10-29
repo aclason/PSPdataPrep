@@ -12,6 +12,7 @@
 #'
 #' @details
 #' Just pass the TSA number if want to overide importing all the data
+#' To do: include a progress bar
 #'
 #' @return
 #' @export
@@ -20,9 +21,9 @@
 import_psps <- function(data_path, tsas = TRUE){
 
   if(tsas){
-    tsa_r <- list.files(paste0(datpath,"Sample"), full.names = TRUE)
+    tsa_r <- list.files(paste0(data_path,"Sample"), full.names = TRUE)
   }else{
-    tsa_r <- paste0(datpath, "Sample", "/TSA", tsas,".csv")
+    tsa_r <- paste0(data_path, "Sample", "/TSA", tsas,".csv")
   }
 
   read_tsa <- lapply(tsa_r, function(file){
@@ -46,7 +47,7 @@ import_psps <- function(data_path, tsas = TRUE){
 #'
 #' @param samples_data Imported sample data output by importPSP function
 #' @param BECzone BEC zone(s) to be selected. Required. can be a vector of multiple zones
-#' @param BEClabel BEC label(s) to be selected. Required. can be a vector of multiple subzones
+#' @param BECsubzone BEC label(s) to be selected. Required. can be a vector of multiple subzones
 #' @param site_series Site series of interest to be selected
 #' @param min_remeasure Minimum remeasurement interval for selected plots
 #' @param treatments Options = "THINNED" or "none" for untreated (default)
@@ -60,38 +61,43 @@ import_psps <- function(data_path, tsas = TRUE){
 #' beclabel_grd	concatanation of (BGC_zone_grd + BGC_sbzn_grd + BGC_var_grd), ground sample based classification
 #'
 #' @examples
-select_psps <- function(samples_data, BECzone, BECsubzone, site_series,
-                    min_remeasure, treatments = "none",
-                    stand_origin = "untreated"){
+select_psps <- function(samples_data, BECzone = NULL, BECsubzone = NULL,
+                        site_series = NULL,
+                        min_remeasure, treatments = "none",
+                        stand_origin = "untreated"){
 
   # Remove repeats (which I think represent sub-plots)
   uni.samples.dt <- unique(samples_data, by="SAMP_ID")
 
-  # bec zone
-  bl <- uni.samples.dt[like(beclabel, BECzone, ignore.case = TRUE)]
-  blg <- uni.samples.dt[like(beclabel_grd, BECzone, ignore.case = TRUE)]
-  bl_blg <- unique(rbind(bl,blg))
+  #updated to assume the bec_label_grd is most accurate
+    # bec zone
+    combined_condition <- paste(BECzone,collapse = "|")
+    #bl <- uni.samples.dt[like(beclabel, combined_condition, ignore.case = TRUE)]
+    blg <- uni.samples.dt[like(bgc_zone, combined_condition, ignore.case = TRUE)]
+    #bl_blg <- unique(rbind(bl,blg))
 
-  # becsubzone
-  combined_condition <- paste(BECsubzone,collapse = "|")
-  bl_s <- bl_blg[like(beclabel, combined_condition, ignore.case = TRUE)]
-  blg_s <- bl_blg[like(beclabel_grd, combined_condition, ignore.case = TRUE)]
-  bl_blg_s <- unique(rbind(bl_s,blg_s))
+  if(!is.null(BECsubzone)){
+    # bec label (includes zone and subzone)
+    zone_subzone <- paste0(BECzone, BECsubzone)
+    combined_condition <- paste(zone_subzone,collapse = "|")
+    #bl_s <- bl_blg[like(beclabel, combined_condition, ignore.case = TRUE)]
+    blg <- blg[like(bgc_subzone, combined_condition, ignore.case = TRUE)]
+    #bl_blg_s <- unique(rbind(bl_s,blg_s))
+  }
 
   #end up with some random calls, so clean again
-  combined_condition <- paste0(BECzone, BECsubzone, collapse = "|")
-  zs <- bl_blg_s[like(beclabel, combined_condition, ignore.case = TRUE)]
+  #combined_condition <- paste0(BECzone, BECsubzone, collapse = "|")
+  #zs <- bl_blg_s[like(beclabel_grd, combined_condition, ignore.case = TRUE)]
 
 
   #if site series passed
   if(!is.null(site_series)){
     combined_condition <- paste("bgc_ss_grd","==",site_series, collapse = "|")
-    zs_ss <-  zs[eval(parse(text = combined_condition))]
-
+    zs_ss <-  blg[eval(parse(text = combined_condition))]
     #has there been more than one measurement?
     remeas.samples <- zs_ss[(zs_ss[,meas_yr_first]!= zs_ss[,meas_yr_last])]
   }else{
-    remeas.samples <- zs[(zs[,meas_yr_first]!= zs[,meas_yr_last])]
+    remeas.samples <- blg[(blg[,meas_yr_first]!= blg[,meas_yr_last])]
   }
 
   #has it been measured for longer than the minimum amount?

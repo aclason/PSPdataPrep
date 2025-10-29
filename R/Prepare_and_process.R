@@ -12,11 +12,18 @@
 #'
 #' @return
 #' @export
+#' @description
+#' we consider live trees here to be:L=live, I=Live ingrowth exceeding minimum DBH tagging
+#' limit (if a subplot tree) or exceeding breakpoint DBH limit (if in main plot),
+#' and V=live vet. Dead is everything else (DP=dead potential (<50% decay),
+#' DU=dead useless (>=50% decay), C=cut, X=ingrowth less than minimum DBH of 4.0cm)
+#'
+#'
 #'
 #' @examples
 psp_tree_meas <- function(data_path, tsas, selected_plots){
 
-  tree.dat <- import_trees(data_path = datpath,
+  tree.dat <- import_trees(data_path = data_path,
                            tsas = tsas_sel,
                            selected_plots = selected_psps)
 
